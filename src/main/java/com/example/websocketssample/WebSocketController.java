@@ -6,7 +6,17 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.HtmlUtils;
+
+import java.sql.Time;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 
 @Controller
 public class WebSocketController {
@@ -19,16 +29,18 @@ public class WebSocketController {
     }
 
     @MessageMapping("/hello")
-    @SendTo("/topic/greetings")
-    public Greeting greeting(Message message) throws Exception {
-        Thread.sleep(1000);
-        return new Greeting("Sveiki atvykę, " + HtmlUtils.htmlEscape(message.getName()) + "!");
+    public void greeting(String pasirinkimas) throws Exception {
+        laikoZona = pasirinkimas;
     }
-    private int counter = 0;
 
-    @Scheduled(fixedRate = 3000)
+    public String laikoZona = "Australia/Sydney";
+
+    @Scheduled(fixedRate = 1000)
     public void sendGreeting() {
-        messagingTemplate.convertAndSend("/topic/heyhey", "Hello " + counter++);
+        ZonedDateTime valandos = ZonedDateTime.now();
+        ZonedDateTime klientoValandos = valandos.withZoneSameInstant(ZoneId.of(laikoZona));
+        String pakeistosValandos = klientoValandos.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        messagingTemplate.convertAndSend("/topic/heyhey", pakeistosValandos);
     }
 }
 
