@@ -16,6 +16,8 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Controller
@@ -28,10 +30,16 @@ public class WebSocketController {
         this.messagingTemplate = messagingTemplate;
     }
 
+    @Autowired
+    public Jokes j;
+
     @MessageMapping("/hello")
     public void greeting(String pasirinkimas) throws Exception {
         laikoZona = pasirinkimas;
     }
+
+
+
 
     public String laikoZona = "Australia/Sydney";
 
@@ -41,6 +49,11 @@ public class WebSocketController {
         ZonedDateTime klientoValandos = valandos.withZoneSameInstant(ZoneId.of(laikoZona));
         String pakeistosValandos = klientoValandos.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         messagingTemplate.convertAndSend("/topic/heyhey", pakeistosValandos);
+    }
+
+    @Scheduled(fixedRate = 5000)
+    public void sendJoke(){
+        messagingTemplate.convertAndSend("/topic/joke", j.randomJoke());
     }
 }
 
